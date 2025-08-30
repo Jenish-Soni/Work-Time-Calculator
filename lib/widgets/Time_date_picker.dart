@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:worktime_calculator/colors/colors_const.dart';
 
 class TimeDatePicker extends StatefulWidget {
   final String text;
+  final DateTime dateTime;
 
-  const TimeDatePicker({super.key, required this.text});
+  const TimeDatePicker({super.key, required this.text, required this.dateTime});
 
   @override
   State<TimeDatePicker> createState() => _TimeDatePickerState();
@@ -41,7 +43,7 @@ class _TimeDatePickerState extends State<TimeDatePicker> {
               child: SizedBox(),
             ),
             Text(
-              "09:00 PM",
+              DateFormat.jm().format(widget.dateTime),
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
