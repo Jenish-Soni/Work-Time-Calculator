@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:worktime_calculator/widgets/Time_date_picker.dart';
 import 'package:worktime_calculator/widgets/custom_time_picker.dart';
 
@@ -15,27 +16,29 @@ class _HomePageState extends State<HomePage> {
   DateTime _loginTime = DateTime.now();
   DateTime _breakFrom = DateTime.now();
   DateTime _breakTo = DateTime.now();
+  DateTime? finalTime;
 
-  Future<void> _showTimePicker(DateTime time) async {
+  Future<void> _showTimePicker(DateTime time, String type) async {
     final selectedTime = await showDialog<DateTime>(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          // Use the custom component inside the dialog
           child: CustomTimePicker(
             initialTime: time,
-            onTimeChanged: (newTime) {
-              time = newTime;
-            },
+            onTimeChanged: (newTime) {},
           ),
         );
       },
     );
-
-    // Update the state with the new time if the user selected one
     if (selectedTime != null) {
       setState(() {
-        _loginTime = selectedTime;
+        if (type == "login") {
+          _loginTime = selectedTime;
+        } else if (type == "breakFrom") {
+          _breakFrom = selectedTime;
+        } else if (type == "breakTo") {
+          _breakTo = selectedTime;
+        }
       });
     }
   }
@@ -81,7 +84,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      _showTimePicker(_loginTime);
+                      _showTimePicker(_loginTime, "login");
                     },
                     child: TimeDatePicker(
                       text: "Login Time",
@@ -93,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      _showTimePicker(_breakFrom);
+                      _showTimePicker(_breakFrom, "breakFrom");
                     },
                     child: TimeDatePicker(
                       text: "Break From",
@@ -105,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      _showTimePicker(_breakTo);
+                      _showTimePicker(_breakTo, "breakTo");
                     },
                     child: TimeDatePicker(
                       text: "Break To",
@@ -116,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                     height: 20,
                   ),
                   Container(
-                    height: 140,
+                    height: 120,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: ColorsConst.Cardbg,
@@ -136,7 +139,9 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(color: Colors.white),
                             ),
                             Text(
-                              "05:00 PM",
+                              finalTime == null
+                                  ? '00:00'
+                                  : DateFormat('hh:mm a').format(finalTime!),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -147,6 +152,56 @@ class _HomePageState extends State<HomePage> {
                         ),
                         Expanded(child: SizedBox()),
                       ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Duration actualTime = const Duration(
+                        hours: 8,
+                        minutes: 30,
+                      );
+                      if (_loginTime.hour == DateTime.now().hour &&
+                          _loginTime.minute == DateTime.now().minute &&
+                          _breakFrom.hour == DateTime.now().hour &&
+                          _breakFrom.minute == DateTime.now().minute &&
+                          _breakTo.hour == DateTime.now().hour &&
+                          _breakTo.minute == DateTime.now().minute) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Please Select Time")),
+                        );
+                        return;
+                      } else if (_breakFrom.isAfter(_breakTo)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "From Time cannot be after To Time",
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      Duration breakDuration = _breakTo.difference(_breakFrom);
+                      DateTime logoutTime = _loginTime
+                          .add(actualTime)
+                          .add(breakDuration);
+                      setState(() {
+                        finalTime = logoutTime;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorsConst.accent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                    child: Text(
+                      "Submit",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
                   ),
                 ],
